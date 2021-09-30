@@ -3,14 +3,16 @@
 Authors: `TalhaKhamoor` `goktugyil`
 Implemented a ping pong game according to the template provided.
 
+https://user-images.githubusercontent.com/59896329/135393638-d7688de6-d369-4457-bdb4-f9647f0ea33c.mp4
+
 ## Steps Completed Before Starting Project
 
 - Forked repository
-- Created a new branch and switched into it.
+- Created a new branch and switched into it. 
 
 ## How To Run App
 
-To run the app, download application off the repo. Make sure you have node.js installed. Go into your terminal and navigate to the folder that contains the index.js file. Use npm init to setup/create npm package. Use npm to install express. run node node index.js to start application.
+To run the app, download application off the repo. Make sure you have node.js installed. Go into your terminal and navigate to the folder that contains the index.js file. Use npm init to setup/create npm package. Use npm to install express. Run node index.js to start application.
 
 ## Starting Template
 
