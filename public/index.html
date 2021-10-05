@@ -28,7 +28,7 @@
 
       app.onInit = function () {
         this.canvas = document.getElementById("canvas");
-        this.context = this.canvas.getContext("2d");
+
         this.nodes.push({
           id: "player-one",
           x: canvas.width / 80,
@@ -131,121 +131,18 @@
       app.onUpdate = function (time) {
         [playerOne, playerTwo, ball] = getEntities();
 
-        movePaddles(playerOne, playerTwo);
-        moveBall(ball);
-        lockInPadles(playerOne, playerTwo);
-
-        LockInBall(ball);
-
-        let player = ball.x < canvas.width / 2 ? playerOne : playerTwo;
-
-        scored(ball);
-
         reflectBallPaddle(playerOne, playerTwo, ball);
 
-        // if (isBallTouchingPaddle(player, ball, playerOne, playerTwo))
-        //   xCoordDirection = -xCoordDirection;
+        movePaddles(playerOne, playerTwo);
+
+        moveBall(ball);
+
+        lockInPadles(playerOne, playerTwo);
+
+        lockInBall(ball);
+
+        score(ball);
       };
-
-      function reflectBallPaddle(playerOne, playerTwo, ball) {
-        // logic to figure out which paddle the ball is closer to
-        let player = ball.x < canvas.width / 2 ? playerOne : playerTwo;
-
-        // based on where the ball touches the pad it sends on a different angle
-        if (isBallTouchingPaddle(player)) {
-          let collisionPoint = ball.y - (player.y + player.height / 2);
-          collisionPoint = collisionPoint / (player.height / 2);
-          let angle = (Math.PI / 4) * collisionPoint;
-
-          let direction = ball.x < canvas.width / 2 ? 1 : -1;
-          xCoordDirection = direction * ballSpeed * Math.cos(angle);
-          yCoordDirection = ballSpeed * Math.sin(angle);
-          ballSpeed += 0.2;
-        }
-      }
-
-      function getEntities() {
-        playerOne = app.getNode("player-one");
-        playerTwo = app.getNode("player-two");
-        ball = app.getNode("ball");
-
-        return (entities = [playerOne, playerTwo, ball]);
-      }
-
-      function moveBall(ball) {
-        ball.x += xCoordDirection;
-        ball.y += yCoordDirection;
-      }
-
-      function movePaddles(playerOne, playerTwo) {
-        playerOne.y += speedOfPaddle1;
-        playerTwo.y += speedOfPaddle2;
-      }
-
-      function lockInPadles(playerOne, playerTwo) {
-        if (playerOne.y <= 0) {
-          playerOne.y = 0;
-        }
-        if (playerTwo.y <= 0) {
-          playerTwo.y = 0;
-        }
-        if (playerOne.y >= canvas.height - playerOne.height) {
-          playerOne.y = canvas.height - playerOne.height;
-        }
-        if (playerTwo.y >= canvas.height - playerTwo.height) {
-          playerTwo.y = canvas.height - playerTwo.height;
-        }
-      }
-
-      function LockInBall(ball) {
-        if (ball.y <= 12 / 2 || ball.y >= canvas.height - ball.width / 2) {
-          yCoordDirection = -yCoordDirection;
-        }
-      }
-
-      function scored(ball) {
-        if (!isGameStarted) return app.reset();
-        if (ball.x <= 12 / 2) {
-          playerTwoScore++;
-          console.log("PlayerTwo : " + playerTwoScore);
-          SCORE_NOISE.load();
-          SCORE_NOISE.play();
-          app.reset();
-        } else if (ball.x >= canvas.width - ball.width / 2) {
-          playerOneScore++;
-          console.log("PlayerOne : " + playerOneScore);
-          SCORE_NOISE.load();
-          SCORE_NOISE.play();
-          app.reset();
-        }
-      }
-
-      function isBallTouchingPaddle(player) {
-        [playerOne, playerTwo, ball] = getEntities();
-        var isBallHittingYCoordinates =
-          player.y <= ball.y && ball.y <= player.y + player.height
-            ? true
-            : false;
-        if (
-          player.x <= ball.x + ball.width / 2 &&
-          player == playerTwo &&
-          isBallHittingYCoordinates
-        ) {
-          COLLISION_NOISE.load();
-          COLLISION_NOISE.play();
-          return true;
-        } else if (
-          player.x + player.width >= ball.x - ball.width / 2 &&
-          player == playerOne &&
-          isBallHittingYCoordinates
-        ) {
-          COLLISION_NOISE.load();
-          COLLISION_NOISE.play();
-          return true;
-        } else {
-          return false;
-        }
-      }
 
       app.pause = function () {
         if (xCoordDirection == 0) {
@@ -269,24 +166,92 @@
           }
           isGamePaused = true;
         }
+
         if (!isGamePaused) {
           this.nodes.splice(4, this.nodes.length);
         }
       };
+
       app.reset = function () {
-        var playerOne = app.getNode("player-one");
-        var playerTwo = app.getNode("player-two");
-        var ball = app.getNode("ball");
+        let [playerOne, playerTwo, ball] = getEntities();
 
         ballSpeed = 3;
         ball.x = canvas.width / 2;
         ball.y = canvas.height / 2;
+
         playerOne.y = playerTwo.y =
           canvas.height / 2 - (canvas.height * 0.2) / 2;
+
         xCoordDirection = randomiseKickOff(xCoordDirection);
         yCoordDirection = randomiseKickOff(yCoordDirection);
+
         app.pause();
       };
+
+      function reflectBallPaddle(playerOne, playerTwo, ball) {
+        // logic to figure out which paddle the ball is closer to
+        let player = ball.x < canvas.width / 2 ? playerOne : playerTwo;
+
+        // based on where the ball touches the pad it sends on a different angle
+        if (isBallTouchingPaddle(player)) {
+          let collisionPoint = ball.y - (player.y + player.height / 2);
+          collisionPoint = collisionPoint / (player.height / 2);
+          let angle = (Math.PI / 4) * collisionPoint;
+
+          let direction = ball.x < canvas.width / 2 ? 1 : -1;
+          xCoordDirection = direction * ballSpeed * Math.cos(angle);
+          yCoordDirection = ballSpeed * Math.sin(angle);
+          ballSpeed += 0.2;
+        }
+      }
+
+      function movePaddles(playerOne, playerTwo) {
+        playerOne.y += speedOfPaddle1;
+        playerTwo.y += speedOfPaddle2;
+      }
+
+      function moveBall(ball) {
+        ball.x += xCoordDirection;
+        ball.y += yCoordDirection;
+      }
+
+      function lockInPadles(playerOne, playerTwo) {
+        if (playerOne.y <= 0) {
+          playerOne.y = 0;
+        }
+        if (playerTwo.y <= 0) {
+          playerTwo.y = 0;
+        }
+        if (playerOne.y >= canvas.height - playerOne.height) {
+          playerOne.y = canvas.height - playerOne.height;
+        }
+        if (playerTwo.y >= canvas.height - playerTwo.height) {
+          playerTwo.y = canvas.height - playerTwo.height;
+        }
+      }
+
+      function lockInBall(ball) {
+        if (ball.y <= 12 / 2 || ball.y >= canvas.height - ball.width / 2)
+          yCoordDirection = -yCoordDirection;
+      }
+
+      function score(ball) {
+        if (!isGameStarted) return app.reset();
+
+        if (ball.x <= 12 / 2) {
+          playerTwoScore++;
+          console.log("PlayerTwo : " + playerTwoScore);
+          SCORE_NOISE.load();
+          SCORE_NOISE.play();
+          app.reset();
+        } else if (ball.x >= canvas.width - ball.width / 2) {
+          playerOneScore++;
+          console.log("PlayerOne : " + playerOneScore);
+          SCORE_NOISE.load();
+          SCORE_NOISE.play();
+          app.reset();
+        }
+      }
 
       function randomiseKickOff(coordinates) {
         if (Math.random() < 0.5) {
@@ -294,6 +259,43 @@
         } else {
           return (coordinates = +2);
         }
+      }
+
+      function isBallTouchingPaddle(player) {
+        [playerOne, playerTwo, ball] = getEntities();
+
+        var isBallHittingYCoordinates =
+          player.y <= ball.y && ball.y <= player.y + player.height
+            ? true
+            : false;
+
+        if (
+          player.x <= ball.x + ball.width / 2 &&
+          player == playerTwo &&
+          isBallHittingYCoordinates
+        ) {
+          COLLISION_NOISE.load();
+          COLLISION_NOISE.play();
+          return true;
+        } else if (
+          player.x + player.width >= ball.x - ball.width / 2 &&
+          player == playerOne &&
+          isBallHittingYCoordinates
+        ) {
+          COLLISION_NOISE.load();
+          COLLISION_NOISE.play();
+          return true;
+        } else {
+          return false;
+        }
+      }
+
+      function getEntities() {
+        playerOne = app.getNode("player-one");
+        playerTwo = app.getNode("player-two");
+        ball = app.getNode("ball");
+
+        return (entities = [playerOne, playerTwo, ball]);
       }
     </script>
   </body>
