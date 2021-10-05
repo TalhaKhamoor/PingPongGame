@@ -42,6 +42,7 @@
       var savedYCoordDirection = 2;
       var playerOneScore = 0;
       var playerTwoScore = -1;
+      let ballSpeed = 0;
 
       app.onInit = function () {
         this.canvas = document.getElementById("canvas");
@@ -127,12 +128,12 @@
             speedOfPaddle2 = 0;
           }
         });
+
+        ballSpeed = 3;
       };
 
       app.onUpdate = function (time) {
-        var playerOne = this.getNode("player-one");
-        var playerTwo = this.getNode("player-two");
-        var ball = this.getNode("ball");
+        [playerOne, playerTwo, ball] = getEntities();
 
         movePaddles(playerOne, playerTwo);
         moveBall(ball);
@@ -144,9 +145,36 @@
 
         scored(ball);
 
-        if (isBallTouchingPaddle(player, ball, playerOne, playerTwo))
-          xCoordDirection = -xCoordDirection;
+        reflectBallPaddle(playerOne, playerTwo, ball);
+
+        // if (isBallTouchingPaddle(player, ball, playerOne, playerTwo))
+        //   xCoordDirection = -xCoordDirection;
       };
+
+      function reflectBallPaddle(playerOne, playerTwo, ball) {
+        // logic to figure out which paddle the ball is closer to
+        let player = ball.x < canvas.width / 2 ? playerOne : playerTwo;
+
+        // based on where the ball touches the pad it sends on a different angle
+        if (isBallTouchingPaddle(player)) {
+          let collisionPoint = ball.y - (player.y + player.height / 2);
+          collisionPoint = collisionPoint / (player.height / 2);
+          let angle = (Math.PI / 4) * collisionPoint;
+
+          let direction = ball.x < canvas.width / 2 ? 1 : -1;
+          xCoordDirection = direction * ballSpeed * Math.cos(angle);
+          yCoordDirection = ballSpeed * Math.sin(angle);
+          ballSpeed += 0.2;
+        }
+      }
+
+      function getEntities() {
+        playerOne = app.getNode("player-one");
+        playerTwo = app.getNode("player-two");
+        ball = app.getNode("ball");
+
+        return (entities = [playerOne, playerTwo, ball]);
+      }
 
       function moveBall(ball) {
         ball.x += xCoordDirection;
@@ -191,7 +219,8 @@
         }
       }
 
-      isBallTouchingPaddle = (player, ball, playerOne, playerTwo) => {
+      function isBallTouchingPaddle(player) {
+        [playerOne, playerTwo, ball] = getEntities();
         var isBallHittingYCoordinates =
           player.y <= ball.y && ball.y <= player.y + player.height
             ? true
@@ -211,7 +240,7 @@
         else {
           return false;
         }
-      };
+      }
 
       app.pause = function () {
         if (xCoordDirection == 0) {
