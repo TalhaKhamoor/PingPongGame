@@ -3,6 +3,7 @@
   <head>
     <title>Ping Pong Game</title>
     <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="data:;base64,=" />
   </head>
   <body>
     <canvas id="canvas" width="800" height="400"></canvas>
@@ -18,7 +19,7 @@
       var savedXCoordDirection = 2;
       var savedYCoordDirection = 2;
       var playerOneScore = 0;
-      var playerTwoScore = -1;
+      var playerTwoScore = 0;
       let ballSpeed = 0;
 
       const COLLISION_NOISE = new Audio("./sounds/hit-noise.mp3");
@@ -78,42 +79,52 @@
         });
 
         document.addEventListener("keydown", (e) => {
-          if (e.keyCode == 32) {
-            if (!isMusicStarted) {
-              BGMUSIC.load();
-              BGMUSIC.play();
-              isMusicStarted = true;
-            }
-            app.pause();
-          }
-          if (e.keyCode == 82) {
-            app.reset();
-          }
-          if (!isGamePaused) {
-            if (e.keyCode == 87) {
+          switch (true) {
+            case e.keyCode == 32:
+              // kicks off music after first unpause
+              if (!isMusicStarted) {
+                BGMUSIC.load();
+                BGMUSIC.play();
+                isMusicStarted = true;
+              }
+              app.pause();
+              break;
+            case e.keyCode == 82:
+              app.reset();
+              break;
+            case e.keyCode == 87 && !isGamePaused:
               speedOfPaddle1 = -3;
-            } else if (e.keyCode == 83) {
+              break;
+            case e.keyCode == 83 && !isGamePaused:
               speedOfPaddle1 = +3;
-            } else if (e.keyCode == 38) {
+              break;
+            case e.keyCode == 38 && !isGamePaused:
               speedOfPaddle2 = -3;
-            } else if (e.keyCode == 40) {
+              break;
+            case e.keyCode == 40 && !isGamePaused:
               speedOfPaddle2 = +3;
-            }
+              break;
           }
         });
 
         document.addEventListener("keyup", (e) => {
-          if (e.keyCode == 87) {
-            speedOfPaddle1 = 0;
-          } else if (e.keyCode == 83) {
-            speedOfPaddle1 = 0;
-          } else if (e.keyCode == 38) {
-            speedOfPaddle2 = 0;
-          } else if (e.keyCode == 40) {
-            speedOfPaddle2 = 0;
+          switch (e.keyCode) {
+            case 87:
+              speedOfPaddle1 = 0;
+              break;
+            case 83:
+              speedOfPaddle1 = 0;
+              break;
+            case 38:
+              speedOfPaddle2 = 0;
+              break;
+            case 40:
+              speedOfPaddle2 = 0;
+              break;
           }
         });
 
+        isGameStarted = true;
         ballSpeed = 3;
       };
 
@@ -246,7 +257,7 @@
           savedYCoordDirection = yCoordDirection;
           xCoordDirection = 0;
           yCoordDirection = 0;
-          if (!isGamePaused) {
+          if (isGameStarted) {
             this.nodes.push({
               id: "text",
               value:
