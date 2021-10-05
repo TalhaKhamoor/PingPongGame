@@ -99,20 +99,19 @@
         document.addEventListener("keydown", (e) => {
           if (e.keyCode == 32) {
             app.pause();
-            this.nodes.splice(4, this.nodes.length);
           }
           if (e.keyCode == 82) {
             app.reset();
           }
           if (!isGamePaused) {
             if (e.keyCode == 87) {
-              speedOfPaddle1 = -2;
+              speedOfPaddle1 = -3;
             } else if (e.keyCode == 83) {
-              speedOfPaddle1 = +2;
+              speedOfPaddle1 = +3;
             } else if (e.keyCode == 38) {
-              speedOfPaddle2 = -2;
+              speedOfPaddle2 = -3;
             } else if (e.keyCode == 40) {
-              speedOfPaddle2 = +2;
+              speedOfPaddle2 = +3;
             }
           }
         });
@@ -226,13 +225,13 @@
             ? true
             : false;
         if (
-          player.x == ball.x + ball.width / 2 &&
+          player.x <= ball.x + ball.width / 2 &&
           player == playerTwo &&
           isBallHittingYCoordinates
         ) {
           return true;
         } else if (
-          player.x + player.width == ball.x - ball.width / 2 &&
+          player.x + player.width >= ball.x - ball.width / 2 &&
           player == playerOne &&
           isBallHittingYCoordinates
         )
@@ -263,6 +262,9 @@
             });
           }
           isGamePaused = true;
+        }
+        if (!isGamePaused) {
+          this.nodes.splice(4, this.nodes.length);
         }
       };
       app.reset = function () {
