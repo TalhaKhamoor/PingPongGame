@@ -2,54 +2,37 @@
 <html>
   <head>
     <title>Ping Pong Game</title>
-    <style>
-      body,
-      html {
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        overflow: hidden;
-        display: block;
-        background-color: black;
-      }
-    </style>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="data:;base64,=" />
   </head>
   <body>
-    <canvas
-      id="canvas"
-      width="800"
-      height="400"
-      style="
-        background-color: black;
-        border: 12px dashed white;
-        padding-left: 0;
-        padding-right: 0;
-        margin-left: auto;
-        margin-right: auto;
-        display: block;
-        width: 98%;
-      "
-    ></canvas>
+    <canvas id="canvas" width="800" height="400"></canvas>
     <script type="text/javascript" src="js/app.js"></script>
     <script type="text/javascript">
       //variables
-      var speedOfPaddle1 = null;
-      var speedOfPaddle2 = null;
-      var xCoordDirection = null;
-      var yCoordDirection = null;
-      var isGamePaused = true;
-      var isGameStarted = false;
-      var savedXCoordDirection = 2;
-      var savedYCoordDirection = 2;
-      var playerOneScore = 0;
-      var playerTwoScore = -1;
+      let speedOfPaddle1 = 0;
+      let speedOfPaddle2 = 0;
+      let xVector = 0;
+      let yVector = 0;
+      let isGamePaused = false;
+      let isGameStarted = false;
+      let isMusicStarted = false;
+      let savedxVector = 0;
+      let savedyVector = 0;
+      let playerOneScore = 0;
+      let playerTwoScore = 0;
+      let ballSpeed = 0;
+      let playerOne;
+      let playerTwo;
+      let ball;
+      //constants
+      const COLLISION_NOISE = new Audio("./sounds/hit-noise.mp3");
+      const BGMUSIC = new Audio("./sounds/bgmusic.mp3");
+      const SCORE_NOISE = new Audio("./sounds/score-noise.mp3");
 
-      // sets up our game and some evenlisteners when server is started
       app.onInit = function () {
-        // getting Canvas from app and its context
         this.canvas = document.getElementById("canvas");
-        this.context = this.canvas.getContext("2d");
-        // adding player one to our nodes array
+
         this.nodes.push({
           id: "player-one",
           x: canvas.width / 80,
@@ -58,7 +41,6 @@
           height: canvas.height * 0.2,
           color: "white",
         });
-        // adding player two to our nodes array
         this.nodes.push({
           id: "player-two",
           x: canvas.width - (canvas.width / 80 + canvas.width * 0.01),
@@ -67,7 +49,6 @@
           height: canvas.height * 0.2,
           color: "white",
         });
-        // adding ball to our nodes array
         this.nodes.push({
           id: "ball",
           x: canvas.width / 2,
@@ -77,11 +58,6 @@
           color: "white",
           direction: 0,
         });
-        /**
-         *  The rest of the nodes onwards would have been better off in a different array
-         *  but I wanted to keep the changes in app.js to a minimum as it was instructed too.
-         **/
-        // adding line to our array
         this.nodes.push({
           id: "line",
           x: canvas.width / 2 - 3.5,
@@ -90,7 +66,6 @@
           height: canvas.height,
           color: "white",
         });
-        // adding text to our array
         this.nodes.push({
           id: "text",
           value: "Talha Khamoor's PingPong",
@@ -98,7 +73,6 @@
           x: 30,
           y: 50,
         });
-        // adding text to our array
         this.nodes.push({
           id: "text",
           value:
@@ -108,88 +82,145 @@
           y: 80,
         });
 
-        // even listner for checking if a key is pressed down
         document.addEventListener("keydown", (e) => {
-          // if statements to figure out which key is pressed
-          // pause/unpause game
-          if (e.keyCode == 32) {
-            app.pause();
-            // splices off all the text nodes from our array
-            this.nodes.splice(4, this.nodes.length);
-          }
-          // reset game
-          if (e.keyCode == 82) {
-            app.reset();
-          }
-          // control of player one and two paddles
-          if (!isGamePaused) {
-            if (e.keyCode == 87) {
-              speedOfPaddle1 = -2;
-            } else if (e.keyCode == 83) {
-              speedOfPaddle1 = +2;
-            } else if (e.keyCode == 38) {
-              speedOfPaddle2 = -2;
-            } else if (e.keyCode == 40) {
-              speedOfPaddle2 = +2;
-            }
+          switch (true) {
+            case e.keyCode == 32:
+              // kicks off music after first unpause
+              if (!isMusicStarted) {
+                BGMUSIC.load();
+                BGMUSIC.play();
+                isMusicStarted = true;
+              }
+              app.pause();
+              break;
+            case e.keyCode == 82:
+              app.reset();
+              break;
+            case e.keyCode == 87 && !isGamePaused:
+              speedOfPaddle1 = -3;
+              break;
+            case e.keyCode == 83 && !isGamePaused:
+              speedOfPaddle1 = +3;
+              break;
+            case e.keyCode == 38 && !isGamePaused:
+              speedOfPaddle2 = -3;
+              break;
+            case e.keyCode == 40 && !isGamePaused:
+              speedOfPaddle2 = +3;
+              break;
           }
         });
 
-        // event listener to see if any keys were released
         document.addEventListener("keyup", (e) => {
-          // control of stopping player one and two paddles
-          if (e.keyCode == 87) {
-            speedOfPaddle1 = 0;
-          } else if (e.keyCode == 83) {
-            speedOfPaddle1 = 0;
-          } else if (e.keyCode == 38) {
-            speedOfPaddle2 = 0;
-          } else if (e.keyCode == 40) {
-            speedOfPaddle2 = 0;
+          switch (e.keyCode) {
+            case 87:
+              speedOfPaddle1 = 0;
+              break;
+            case 83:
+              speedOfPaddle1 = 0;
+              break;
+            case 38:
+              speedOfPaddle2 = 0;
+              break;
+            case 40:
+              speedOfPaddle2 = 0;
+              break;
           }
         });
+
+        ballSpeed = 3;
+        isGameStarted = true;
       };
 
-      // runs everytime there is an update, so most of our logical functions are here
       app.onUpdate = function (time) {
-        var playerOne = this.getNode("player-one");
-        var playerTwo = this.getNode("player-two");
-        var ball = this.getNode("ball");
+        [playerOne, playerTwo, ball] = getEntities();
 
-        // when paddlespeed on evenlistener increase's, this moves paddle
+        reflectBallPaddle(playerOne, playerTwo, ball);
+
         movePaddles(playerOne, playerTwo);
-        // when coordinates of ball on event listener change, this moves the ball
+
         moveBall(ball);
-        // preventing paddle from going off canvas
+
         lockInPadles(playerOne, playerTwo);
 
-        // preventing ball from leaving top and bottom, inversing the y direction
-        LockInBall(ball);
+        lockInBall(ball);
 
-        // figuring out which player has ball on their side
-        let player = ball.x < canvas.width / 2 ? playerOne : playerTwo;
-
-        // ball hitting sidewall, increasing score
-        scored(ball);
-
-        // preventing ball from going pass paddle, inversing x direction
-        if (isBallTouchingPaddle(player, ball, playerOne, playerTwo))
-          xCoordDirection = -xCoordDirection;
+        score(ball);
       };
 
-      // moves ball
-      function moveBall(ball) {
-        ball.x += xCoordDirection;
-        ball.y += yCoordDirection;
+      app.pause = function () {
+        //switch to stop ball / move it
+        if (xVector == 0) {
+          xVector = xVector + savedxVector;
+          yVector = yVector + savedyVector;
+          isGamePaused = false;
+        } else {
+          savedxVector = xVector;
+          savedyVector = yVector;
+          xVector = 0;
+          yVector = 0;
+          // prevents from printing when game hasnt started
+          if (isGameStarted) {
+            this.nodes.push({
+              id: "text",
+              value:
+                playerOneScore.toString() + " : " + playerTwoScore.toString(),
+              sizeAndFont: "50px Arial",
+              x: 600,
+              y: 300,
+            });
+          }
+          isGamePaused = true;
+        }
+        // removes text
+        if (!isGamePaused) {
+          this.nodes.splice(4, this.nodes.length);
+        }
+      };
+
+      app.reset = function () {
+        let [playerOne, playerTwo, ball] = getEntities();
+
+        ballSpeed = 3;
+        ball.x = canvas.width / 2;
+        ball.y = canvas.height / 2;
+
+        playerOne.y = playerTwo.y =
+          canvas.height / 2 - (canvas.height * 0.2) / 2;
+
+        xVector = randomiseKickOff(xVector);
+        yVector = randomiseKickOff(yVector);
+
+        app.pause();
+      };
+
+      function reflectBallPaddle(playerOne, playerTwo, ball) {
+        // logic to figure out which paddle the ball is closer to
+        let player = ball.x < canvas.width / 2 ? playerOne : playerTwo;
+
+        // based on where the ball touches the pad it sends on a different angle
+        if (isBallTouchingPaddle(player)) {
+          let collisionPoint = ball.y - (player.y + player.height / 2);
+          collisionPoint = collisionPoint / (player.height / 2);
+          let angle = (Math.PI / 4) * collisionPoint;
+
+          let direction = ball.x < canvas.width / 2 ? 1 : -1;
+          xVector = direction * ballSpeed * Math.cos(angle);
+          yVector = ballSpeed * Math.sin(angle);
+          ballSpeed += 0.2;
+        }
       }
 
-      // moves paddle based of incresed speeds
       function movePaddles(playerOne, playerTwo) {
         playerOne.y += speedOfPaddle1;
         playerTwo.y += speedOfPaddle2;
       }
 
-      // locks in paddle within canvas
+      function moveBall(ball) {
+        ball.x += xVector;
+        ball.y += yVector;
+      }
+
       function lockInPadles(playerOne, playerTwo) {
         if (playerOne.y <= 0) {
           playerOne.y = 0;
@@ -205,104 +236,75 @@
         }
       }
 
-      // locks in ball within canvas
-      function LockInBall(ball) {
+      function lockInBall(ball) {
         if (ball.y <= 12 / 2 || ball.y >= canvas.height - ball.width / 2) {
-          yCoordDirection = -yCoordDirection;
+          yVector = -yVector;
         }
       }
 
-      // increases score and initiates reset
-      function scored(ball) {
+      function score(ball) {
+        // prevents game score from increasing, due to ball being a 0,0
+        if (!isGameStarted) return app.reset();
+
         if (ball.x <= 12 / 2) {
           playerTwoScore++;
           console.log("PlayerTwo : " + playerTwoScore);
+          SCORE_NOISE.load();
+          SCORE_NOISE.play();
           app.reset();
         } else if (ball.x >= canvas.width - ball.width / 2) {
           playerOneScore++;
           console.log("PlayerOne : " + playerOneScore);
+          SCORE_NOISE.load();
+          SCORE_NOISE.play();
           app.reset();
         }
       }
 
-      // checks if ball is touching paddle
-      isBallTouchingPaddle = (player, ball, playerOne, playerTwo) => {
-        // turing operator to see if ball is within paddle y bounds
-        var isBallHittingYCoordinates =
-          player.y <= ball.y && ball.y <= player.y + player.height
-            ? true
-            : false;
-        // if else tree to make ball bounce of the right edge of paddle
-        if (
-          player.x == ball.x + ball.width / 2 &&
-          player == playerTwo &&
-          isBallHittingYCoordinates
-        ) {
-          return true;
-        } else if (
-          player.x + player.width == ball.x - ball.width / 2 &&
-          player == playerOne &&
-          isBallHittingYCoordinates
-        )
-          return true;
-        else {
-          return false;
-        }
-        // player.x == ball.x + ball.width / 2 ||
-        //           player.x + player.width == ball.x - ball.width / 2)
-      };
-
-      // pauses game
-      app.pause = function () {
-        // if ball is stopped game is paused
-        if (xCoordDirection == 0) {
-          xCoordDirection = xCoordDirection + savedXCoordDirection;
-          yCoordDirection = yCoordDirection + savedYCoordDirection;
-          isGamePaused = false;
-        } else {
-          savedXCoordDirection = xCoordDirection;
-          savedYCoordDirection = yCoordDirection;
-          xCoordDirection = 0;
-          yCoordDirection = 0;
-          if (!isGamePaused) {
-            this.nodes.push({
-              id: "text",
-              value:
-                playerOneScore.toString() + " : " + playerTwoScore.toString(),
-              sizeAndFont: "50px Arial",
-              x: 600,
-              y: 300,
-            });
-          }
-          isGamePaused = true;
-        }
-      };
-
-      // resets game
-      app.reset = function () {
-        var playerOne = app.getNode("player-one");
-        var playerTwo = app.getNode("player-two");
-        var ball = app.getNode("ball");
-        // resetting ball
-        ball.x = canvas.width / 2;
-        ball.y = canvas.height / 2;
-        // restting paddles
-        playerOne.y = playerTwo.y =
-          canvas.height / 2 - (canvas.height * 0.2) / 2;
-        //restting ball direction
-        xCoordDirection = randomiseKickOff(xCoordDirection);
-        yCoordDirection = randomiseKickOff(yCoordDirection);
-        // pauses game to be started with space again
-        app.pause();
-      };
-
-      // refactored - randomize which direction the ball will take off
       function randomiseKickOff(coordinates) {
         if (Math.random() < 0.5) {
           return (coordinates = -2);
         } else {
           return (coordinates = +2);
         }
+      }
+
+      function isBallTouchingPaddle(player) {
+        [playerOne, playerTwo, ball] = getEntities();
+        var isBallHittingYCoordinates =
+          player.y <= ball.y && ball.y <= player.y + player.height
+            ? true
+            : false;
+
+        if (
+          player.x <= ball.x + ball.width / 2 &&
+          player == playerTwo &&
+          isBallHittingYCoordinates
+        ) {
+          COLLISION_NOISE.load();
+          COLLISION_NOISE.play();
+
+          return true;
+        } else if (
+          player.x + player.width >= ball.x - ball.width / 2 &&
+          player == playerOne &&
+          isBallHittingYCoordinates
+        ) {
+          COLLISION_NOISE.load();
+          COLLISION_NOISE.play();
+
+          return true;
+        } else {
+          return false;
+        }
+      }
+
+      function getEntities() {
+        playerOne = app.getNode("player-one");
+        playerTwo = app.getNode("player-two");
+        ball = app.getNode("ball");
+
+        return (entities = [playerOne, playerTwo, ball]);
       }
     </script>
   </body>
