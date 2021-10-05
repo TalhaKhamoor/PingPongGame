@@ -3,7 +3,7 @@
 Authors: `TalhaKhamoor` `goktugyil`
 Implemented a ping pong game according to the template provided.
 
-https://user-images.githubusercontent.com/59896329/135393638-d7688de6-d369-4457-bdb4-f9647f0ea33c.mp4
+https://user-images.githubusercontent.com/59896329/135946125-b827e643-135f-4d9a-ab24-d53a66d90a94.mp4
 
 ## Steps Completed Before Starting Project
 
@@ -39,3 +39,8 @@ Most of app.js was provided aswell as the index.js file. Some working functional
 - Added score system for the game and used the drawText functionality on game.
 - Added resize functionality
 - Made the ball round
+- ball increases speed on every hit 
+- ball moves in a different direction depending on where it hits on the paddle
+- cool background music added when the game first unpauses
+- cool sound effects for the ball hitting paddles and scoring
+- scoreboard issues fixed and shows up whenever game is paused except for when page is first reloaded
