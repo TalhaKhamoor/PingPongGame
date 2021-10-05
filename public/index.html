@@ -37,12 +37,17 @@
       var xCoordDirection = null;
       var yCoordDirection = null;
       var isGamePaused = true;
+      let isMusicStarted = false;
       var isGameStarted = false;
       var savedXCoordDirection = 2;
       var savedYCoordDirection = 2;
       var playerOneScore = 0;
       var playerTwoScore = -1;
       let ballSpeed = 0;
+
+      const COLLISION_NOISE = new Audio("./sounds/hit-noise.mp3");
+      const BGMUSIC = new Audio("./sounds/bgmusic.mp3");
+      const SCORE_NOISE = new Audio("./sounds/score-noise.mp3");
 
       app.onInit = function () {
         this.canvas = document.getElementById("canvas");
@@ -98,6 +103,11 @@
 
         document.addEventListener("keydown", (e) => {
           if (e.keyCode == 32) {
+            if (!isMusicStarted) {
+              BGMUSIC.load();
+              BGMUSIC.play();
+              isMusicStarted = true;
+            }
             app.pause();
           }
           if (e.keyCode == 82) {
@@ -210,10 +220,14 @@
         if (ball.x <= 12 / 2) {
           playerTwoScore++;
           console.log("PlayerTwo : " + playerTwoScore);
+          SCORE_NOISE.load();
+          SCORE_NOISE.play();
           app.reset();
         } else if (ball.x >= canvas.width - ball.width / 2) {
           playerOneScore++;
           console.log("PlayerOne : " + playerOneScore);
+          SCORE_NOISE.load();
+          SCORE_NOISE.play();
           app.reset();
         }
       }
@@ -229,14 +243,18 @@
           player == playerTwo &&
           isBallHittingYCoordinates
         ) {
+          COLLISION_NOISE.load();
+          COLLISION_NOISE.play();
           return true;
         } else if (
           player.x + player.width >= ball.x - ball.width / 2 &&
           player == playerOne &&
           isBallHittingYCoordinates
-        )
+        ) {
+          COLLISION_NOISE.load();
+          COLLISION_NOISE.play();
           return true;
-        else {
+        } else {
           return false;
         }
       }
@@ -271,6 +289,8 @@
         var playerOne = app.getNode("player-one");
         var playerTwo = app.getNode("player-two");
         var ball = app.getNode("ball");
+
+        ballSpeed = 3;
         ball.x = canvas.width / 2;
         ball.y = canvas.height / 2;
         playerOne.y = playerTwo.y =
