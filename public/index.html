@@ -9,19 +9,21 @@
     <canvas id="canvas" width="800" height="400"></canvas>
     <script type="text/javascript" src="js/app.js"></script>
     <script type="text/javascript">
-      var speedOfPaddle1 = null;
-      var speedOfPaddle2 = null;
-      var xCoordDirection = null;
-      var yCoordDirection = null;
-      var isGamePaused = true;
+      // variables
+      let speedOfPaddle1 = null;
+      let speedOfPaddle2 = null;
+      let xVelocity = null;
+      let yVelocity = null;
+      let isGamePaused = false;
       let isMusicStarted = false;
-      var isGameStarted = false;
-      var savedXCoordDirection = 2;
-      var savedYCoordDirection = 2;
-      var playerOneScore = 0;
-      var playerTwoScore = 0;
+      let isGameStarted = false;
+      let savedxVelocity = 2;
+      let savedyVelocity = 2;
+      let playerOneScore = 0;
+      let playerTwoScore = 0;
       let ballSpeed = 0;
 
+      //constants
       const COLLISION_NOISE = new Audio("./sounds/hit-noise.mp3");
       const BGMUSIC = new Audio("./sounds/bgmusic.mp3");
       const SCORE_NOISE = new Audio("./sounds/score-noise.mp3");
@@ -145,15 +147,17 @@
       };
 
       app.pause = function () {
-        if (xCoordDirection == 0) {
-          xCoordDirection = xCoordDirection + savedXCoordDirection;
-          yCoordDirection = yCoordDirection + savedYCoordDirection;
+        // stop ball from / move it
+        if (xVelocity == 0) {
+          xVelocity = xVelocity + savedxVelocity;
+          yVelocity = yVelocity + savedyVelocity;
           isGamePaused = false;
         } else {
-          savedXCoordDirection = xCoordDirection;
-          savedYCoordDirection = yCoordDirection;
-          xCoordDirection = 0;
-          yCoordDirection = 0;
+          savedxVelocity = xVelocity;
+          savedyVelocity = yVelocity;
+          xVelocity = 0;
+          yVelocity = 0;
+          // prevents from printing when game hasnt started
           if (isGameStarted) {
             this.nodes.push({
               id: "text",
@@ -166,7 +170,7 @@
           }
           isGamePaused = true;
         }
-
+        //removes text
         if (!isGamePaused) {
           this.nodes.splice(4, this.nodes.length);
         }
@@ -182,8 +186,8 @@
         playerOne.y = playerTwo.y =
           canvas.height / 2 - (canvas.height * 0.2) / 2;
 
-        xCoordDirection = randomiseKickOff(xCoordDirection);
-        yCoordDirection = randomiseKickOff(yCoordDirection);
+        xVelocity = randomiseKickOff(xVelocity);
+        yVelocity = randomiseKickOff(yVelocity);
 
         app.pause();
       };
@@ -199,8 +203,8 @@
           let angle = (Math.PI / 4) * collisionPoint;
 
           let direction = ball.x < canvas.width / 2 ? 1 : -1;
-          xCoordDirection = direction * ballSpeed * Math.cos(angle);
-          yCoordDirection = ballSpeed * Math.sin(angle);
+          xVelocity = direction * ballSpeed * Math.cos(angle);
+          yVelocity = ballSpeed * Math.sin(angle);
           ballSpeed += 0.2;
         }
       }
@@ -211,8 +215,8 @@
       }
 
       function moveBall(ball) {
-        ball.x += xCoordDirection;
-        ball.y += yCoordDirection;
+        ball.x += xVelocity;
+        ball.y += yVelocity;
       }
 
       function lockInPadles(playerOne, playerTwo) {
@@ -232,10 +236,11 @@
 
       function lockInBall(ball) {
         if (ball.y <= 12 / 2 || ball.y >= canvas.height - ball.width / 2)
-          yCoordDirection = -yCoordDirection;
+          yVelocity = -yVelocity;
       }
 
       function score(ball) {
+        // prevents game score from increasing when page reloads
         if (!isGameStarted) return app.reset();
 
         if (ball.x <= 12 / 2) {
