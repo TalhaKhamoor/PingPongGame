@@ -17,3 +17,6 @@ canvas {
   display: block;
   width: 98%;
 }
+.music {
+  display: none;
+}

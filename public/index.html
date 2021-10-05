@@ -3,6 +3,7 @@
   <head>
     <title>Ping Pong Game</title>
     <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="data:;base64,=" />
   </head>
   <body>
     <canvas id="canvas" width="800" height="400"></canvas>
@@ -15,13 +16,19 @@
       let yVector = 0;
       let isGamePaused = false;
       let isGameStarted = false;
+      let isMusicStarted = false;
       let savedxVector = 0;
       let savedyVector = 0;
       let playerOneScore = 0;
       let playerTwoScore = 0;
+      let ballSpeed = 0;
       let playerOne;
       let playerTwo;
       let ball;
+      //constants
+      const COLLISION_NOISE = new Audio("./sounds/hit-noise.mp3");
+      const BGMUSIC = new Audio("./sounds/bgmusic.mp3");
+      const SCORE_NOISE = new Audio("./sounds/score-noise.mp3");
 
       app.onInit = function () {
         this.canvas = document.getElementById("canvas");
@@ -78,22 +85,28 @@
         document.addEventListener("keydown", (e) => {
           switch (true) {
             case e.keyCode == 32:
+              // kicks off music after first unpause
+              if (!isMusicStarted) {
+                BGMUSIC.load();
+                BGMUSIC.play();
+                isMusicStarted = true;
+              }
               app.pause();
               break;
             case e.keyCode == 82:
               app.reset();
               break;
             case e.keyCode == 87 && !isGamePaused:
-              speedOfPaddle1 = -2;
+              speedOfPaddle1 = -3;
               break;
             case e.keyCode == 83 && !isGamePaused:
-              speedOfPaddle1 = +2;
+              speedOfPaddle1 = +3;
               break;
             case e.keyCode == 38 && !isGamePaused:
-              speedOfPaddle2 = -2;
+              speedOfPaddle2 = -3;
               break;
             case e.keyCode == 40 && !isGamePaused:
-              speedOfPaddle2 = +2;
+              speedOfPaddle2 = +3;
               break;
           }
         });
@@ -115,6 +128,7 @@
           }
         });
 
+        ballSpeed = 3;
         isGameStarted = true;
       };
 
@@ -135,6 +149,7 @@
       };
 
       app.pause = function () {
+        //switch to stop ball / move it
         if (xVector == 0) {
           xVector = xVector + savedxVector;
           yVector = yVector + savedyVector;
@@ -144,6 +159,7 @@
           savedyVector = yVector;
           xVector = 0;
           yVector = 0;
+          // prevents from printing when game hasnt started
           if (isGameStarted) {
             this.nodes.push({
               id: "text",
@@ -156,6 +172,7 @@
           }
           isGamePaused = true;
         }
+        // removes text
         if (!isGamePaused) {
           this.nodes.splice(4, this.nodes.length);
         }
@@ -164,6 +181,7 @@
       app.reset = function () {
         let [playerOne, playerTwo, ball] = getEntities();
 
+        ballSpeed = 3;
         ball.x = canvas.width / 2;
         ball.y = canvas.height / 2;
 
@@ -177,9 +195,20 @@
       };
 
       function reflectBallPaddle(playerOne, playerTwo, ball) {
+        // logic to figure out which paddle the ball is closer to
         let player = ball.x < canvas.width / 2 ? playerOne : playerTwo;
 
-        if (isBallTouchingPaddle(player)) xVector = -xVector;
+        // based on where the ball touches the pad it sends on a different angle
+        if (isBallTouchingPaddle(player)) {
+          let collisionPoint = ball.y - (player.y + player.height / 2);
+          collisionPoint = collisionPoint / (player.height / 2);
+          let angle = (Math.PI / 4) * collisionPoint;
+
+          let direction = ball.x < canvas.width / 2 ? 1 : -1;
+          xVector = direction * ballSpeed * Math.cos(angle);
+          yVector = ballSpeed * Math.sin(angle);
+          ballSpeed += 0.2;
+        }
       }
 
       function movePaddles(playerOne, playerTwo) {
@@ -214,14 +243,20 @@
       }
 
       function score(ball) {
+        // prevents game score from increasing, due to ball being a 0,0
         if (!isGameStarted) return app.reset();
+
         if (ball.x <= 12 / 2) {
           playerTwoScore++;
           console.log("PlayerTwo : " + playerTwoScore);
+          SCORE_NOISE.load();
+          SCORE_NOISE.play();
           app.reset();
         } else if (ball.x >= canvas.width - ball.width / 2) {
           playerOneScore++;
           console.log("PlayerOne : " + playerOneScore);
+          SCORE_NOISE.load();
+          SCORE_NOISE.play();
           app.reset();
         }
       }
@@ -242,18 +277,24 @@
             : false;
 
         if (
-          player.x == ball.x + ball.width / 2 &&
+          player.x <= ball.x + ball.width / 2 &&
           player == playerTwo &&
           isBallHittingYCoordinates
         ) {
+          COLLISION_NOISE.load();
+          COLLISION_NOISE.play();
+
           return true;
         } else if (
-          player.x + player.width == ball.x - ball.width / 2 &&
+          player.x + player.width >= ball.x - ball.width / 2 &&
           player == playerOne &&
           isBallHittingYCoordinates
-        )
+        ) {
+          COLLISION_NOISE.load();
+          COLLISION_NOISE.play();
+
           return true;
-        else {
+        } else {
           return false;
         }
       }
